@@ -1,6 +1,6 @@
 {
   "name": "hapi-redux-router",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "hapi plugin for using react-router on the server with Redux.",
   "main": "index.js",
   "scripts": {
