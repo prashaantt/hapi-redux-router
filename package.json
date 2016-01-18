@@ -1,0 +1,39 @@
+{
+  "name": "hapi-redux-router",
+  "version": "1.0.0",
+  "description": "hapi plugin for using react-router on the server with Redux.",
+  "main": "index.js",
+  "scripts": {
+    "test": "lab -c -L -v",
+    "test-cover": "lab -c -r html -o ./test/artifacts/coverage.html && open ./test/artifacts/coverage.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prashaantt/hapi-redux-router"
+  },
+  "author": "Prashant Tiwari <prashaantt@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/prashaantt/hapi-redux-router/issues"
+  },
+  "homepage": "https://github.com/prashaantt/hapi-redux-router",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "devDependencies": {
+    "code": "^2.1.0",
+    "eslint-config-hapi": "^8.0.1",
+    "eslint-plugin-hapi": "^4.0.0",
+    "hapi": "^12.1.0",
+    "lab": "^8.0.2"
+  },
+  "dependencies": {
+    "boom": "^3.1.1",
+    "react": "^0.14.6",
+    "react-dom": "^0.14.6",
+    "react-redux": "^4.0.6",
+    "react-router": "^2.0.0-rc5",
+    "redux": "^3.0.5",
+    "vision": "^4.0.1"
+  }
+}
