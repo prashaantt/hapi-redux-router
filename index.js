@@ -11,90 +11,95 @@ const ReactRouter = require('react-router');
 const internals = {};
 
 
+internals.schema = Joi.object().keys({
+    store: Joi.object().keys({
+        dispatch: Joi.func().required(),
+        subscribe: Joi.func().required(),
+        getState: Joi.func().required(),
+        replaceReducer: Joi.func().required()
+    }),
+    routes: Joi.array().required(),
+    bootstrapAction: Joi.func(),
+    template: Joi.string().required(),
+    viewOptions: Joi.object(),
+    params: Joi.object()
+});
+
+
 internals.validate = (options) => {
 
-    const schema = Joi.object().keys({
-        store: Joi.object().keys({
-            dispatch: Joi.func().required(),
-            subscribe: Joi.func().required(),
-            getState: Joi.func().required(),
-            replaceReducer: Joi.func().required()
-        }),
-        routes: Joi.array().required(),
-        bootstrapAction: Joi.func(),
-        template: Joi.string().required(),
-        viewOptions: Joi.object(),
-        params: Joi.object()
-    });
-
-    return Joi.validate(options, schema);
+    return Joi.validate(options, internals.schema);
 };
 
 
-exports.register = function (server, options, next) {
+exports.register = (server, options, next) => {
 
-    server.ext('onPreResponse', function (request, reply) {
+    server.route({
+        path: '/{path*}',
+        method: 'GET',
+        handler: function (request, reply) {
 
-        const result = internals.validate(options);
-        if (result.error) {
-            return reply(Boom.badRequest(result.error));
+            const result = internals.validate(options);
+            if (result.error) {
+                return reply(Boom.badRequest(result.error));
+            }
+
+            const store = options.store;
+            const routes = options.routes;
+            const bootstrapAction = options.bootstrapAction;
+            const template = options.template;
+            const viewOptions = options.viewOptions;
+            const params = options.params;
+
+            ReactRouter.match({ routes, location: request.url }, (error, redirectLocation, renderProps) => {
+
+                if (error) {
+                    console.error(error);
+                    return reply(error);
+                }
+                else if (redirectLocation) {
+                    return reply.redirect(redirectLocation.pathname + redirectLocation.search);
+                }
+                else if (!renderProps) {
+                    return reply(Boom.notFound('The route was not found'));
+                }
+
+                let promise;
+
+                if (bootstrapAction) {
+                    promise = Promise.resolve(store.dispatch(bootstrapAction()));
+                }
+
+                const InitialComponent = React.createElement(
+                    ReactRedux.Provider,
+                    { store: options.store },
+                    React.createElement(ReactRouter.RoutingContext, renderProps)
+                );
+
+                const componentRenderedToString = ReactDOMServer.renderToString(InitialComponent);
+
+                let initialState = {};
+
+                if (store) {
+                    initialState = store.getState();
+                }
+
+                const context = {
+                    componentRenderedToString,
+                    initialState: JSON.stringify(initialState)
+                };
+
+                Object.assign(context, params);
+
+                if (promise) {
+                    promise.then(() => reply.view(template, context, viewOptions))
+                        .catch((err) => reply(err));
+                }
+                else {
+                    return reply.view(template, context, viewOptions);
+                }
+            });
         }
-        
-        const store = options.store;
-        const routes = options.routes;
-        const bootstrapAction = options.bootstrapAction;
-        const template = options.template;
-        const viewOptions = options.viewOptions;
-        const params = options.params;
-
-        ReactRouter.match({ routes, location: request.url }, (error, redirectLocation, renderProps) => {
-
-            if (error) {
-                console.error(error);
-                return reply(error);
-            }
-            else if (redirectLocation) {
-                return reply.redirect(redirectLocation.pathname + redirectLocation.search);
-            }
-            else if (!renderProps) {
-                return reply(Boom.notFound('The route was not found'));
-            }
-
-            let promise;
-
-            if (bootstrapAction) {
-                promise = Promise.resolve(store.dispatch(bootstrapAction()));
-            }
-
-            const InitialComponent = React.createElement(
-                ReactRedux.Provider,
-                { store: options.store },
-                React.createElement(ReactRouter.RoutingContext, renderProps)
-            );
-
-            const componentRenderedToString = ReactDOMServer.renderToString(InitialComponent);
-
-            let initialState = {};
-
-            if (store) {
-                initialState = store.getState();
-            }
-
-            const context = {
-                componentRenderedToString,
-                initialState: JSON.stringify(initialState)
-            };
-
-            Object.assign(context, params);
-
-            if (promise) {
-                promise.then(() => reply.view(template, context, viewOptions))
-                    .catch((err) => reply(err));
-            }
-            else {
-                return reply.view(template, context, viewOptions);
-            }
-        });
     });
 
     next();
