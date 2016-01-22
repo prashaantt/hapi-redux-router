@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "code": "^2.1.0",
+    "eslint": "^1.10.3",
     "eslint-config-hapi": "^8.0.1",
     "eslint-plugin-hapi": "^4.0.0",
     "hapi": "^12.1.0",
