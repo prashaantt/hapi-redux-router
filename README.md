@@ -1,3 +1,7 @@
+> ## Update
+
+> Deprecated in favour of https://github.com/prashaantt/hapi-react-ssr.
+
 # hapi-redux-router
 
 Currently only supports manifest-style route declarations.
